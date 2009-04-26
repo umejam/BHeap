@@ -1,5 +1,5 @@
 # -*- encoding: euc-jp -*-
-require 'bheap'
+require 'ext/bheap'
 
 describe BHeap, "をnewした時" do
   before do
@@ -44,6 +44,22 @@ describe BHeap, "にpushした時" do
   end
 end
 
+describe BHeap, "を、昇順でソートするようにnewしてからpushした場合" do
+  before do
+    @heap = BHeap.new(lambda {|x, y| y <=> x})
+  end
+
+  it "は、topは常に最も小さいものを返すべき" do
+    min = 20
+    10.times do
+      n = rand(20)
+      min = n if n < min
+      @heap.push n
+      @heap.top.should == min
+    end
+  end
+end
+
 describe BHeap, "からpopした時" do
   before do
     @heap = BHeap.new
@@ -62,6 +78,24 @@ describe BHeap, "からpopした時" do
   end
 end
 
+describe BHeap, "を、昇順でソートするようにnewしてからpopした場合" do
+  before do
+    @heap = BHeap.new(lambda {|x, y| y <=> x})
+    @a = Array.new
+    10.times do
+      n = rand(20)
+      @a.push n
+      @heap.push n
+    end
+    @a.sort!
+  end
+
+  it "は、常に最も小さいものを返すべき" do
+    @heap.pop.should == @a[0]
+    @heap.pop.should == @a[1]
+  end
+end
+
 describe BHeap, "からpopした後" do
   before do
     @heap = BHeap.new
@@ -75,6 +109,26 @@ describe BHeap, "からpopした後" do
   end
 
   it "は、topは常に2番目に大きいものを返すべき" do
+    9.times do |i|
+      @heap.pop
+      @heap.top.should == @a[i + 1]
+    end
+  end
+end
+
+describe BHeap, "を、昇順でソートするようにnewしてからpopした後" do
+  before do
+    @heap = BHeap.new(lambda {|x, y| y <=> x})
+    @a = Array.new
+    10.times do
+      n = rand(20)
+      @a.push n
+      @heap.push n
+    end
+    @a.sort!
+  end
+
+  it "は、topは常に2番目に小さいものを返すべき" do
     9.times do |i|
       @heap.pop
       @heap.top.should == @a[i + 1]

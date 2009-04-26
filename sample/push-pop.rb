@@ -1,4 +1,4 @@
-require 'bheap'
+require 'ext/bheap'
 
 heap = BHeap.new
 

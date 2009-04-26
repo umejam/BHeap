@@ -1,6 +1,7 @@
 class BHeap
-  def initialize
+  def initialize(cmp = lambda {|x, y| x <=> y})
     @a = Array.new
+    @cmp = cmp
   end
 
   def empty?
@@ -12,7 +13,7 @@ class BHeap
     c = @a.length - 1
     p = (c - 1) / 2
     while (c > 0) do
-      break if (@a[p] >= v)
+      break if (@cmp.call(@a[p],  v) == 1)
       @a[c] = @a[p]
       c = p
       p = (c - 1) / 2
@@ -33,8 +34,8 @@ class BHeap
     p = 0
     c = 2 * p + 1
     while (c < @a.length) do
-      c = c + 1 if ((c + 1) < @a.length) && (@a[c] < @a[c + 1])
-      break if (v >= @a[c])
+      c = c + 1 if ((c + 1) < @a.length) && (@cmp.call(@a[c], @a[c + 1]) == -1)
+      break if (@cmp.call(v, @a[c]) == 1)
       @a[p] = @a[c]
       p = c
       c = 2 * p + 1
