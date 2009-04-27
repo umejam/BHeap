@@ -57,12 +57,11 @@ static VALUE bheap_push(VALUE self, VALUE v)
 
   pb->buf[pb->length] = v;
 
-  unsigned long c = pb->length;
-  unsigned long p = (c - 1) / 2;
-
   VALUE args = rb_ary_new2(2);
+  unsigned long c, p;
+  for (c = pb->length; c > 0; c = p) {
+    p = (c - 1) / 2;
 
-  while (c > 0) {
     rb_ary_push(args, pb->buf[p]);
     rb_ary_push(args, v);
     if (1 == NUM2INT(rb_proc_call(pb->cmp, args))) {
@@ -71,8 +70,6 @@ static VALUE bheap_push(VALUE self, VALUE v)
     rb_ary_clear(args);
 
     pb->buf[c] = pb->buf[p];
-    c = p;
-    p = (c - 1) / 2;
   }
   pb->buf[c] = v;
 
@@ -108,12 +105,11 @@ static VALUE bheap_pop(VALUE self)
 
   VALUE r = pb->buf[0];
   pb->buf[0] = v;
-  unsigned long p = 0;
-  unsigned long c = 2 * p + 1;
 
   VALUE args = rb_ary_new2(2);
-
-  while (c < pb->length) {
+  unsigned long p, c;
+  for (p = 0; (2 * p + 1) < pb->length; p = c) {
+    c = 2 * p + 1;
     rb_ary_push(args, pb->buf[c]);
     rb_ary_push(args, pb->buf[c + 1]);
     if (((c + 1) < pb->length) && 
@@ -130,8 +126,6 @@ static VALUE bheap_pop(VALUE self)
     rb_ary_clear(args);
 
     pb->buf[p] = pb->buf[c];
-    p = c;
-    c = 2 * p + 1;
   }
   pb->buf[p] =v;
 
