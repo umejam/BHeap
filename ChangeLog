@@ -1,0 +1,7 @@
+2009-04-29  Takeshi UME Imai  <takeshi@umejam.org>
+
+	* spec/bheap_spec.rb: use RushCheck.
+
+	* ChangeLog: add new file.
+	
+

@@ -1,5 +1,21 @@
 # -*- encoding: euc-jp -*-
+require 'rubygems'
+require 'rushcheck'
 require 'ext/bheap'
+
+def for_all(*cs, &f)
+  RushCheck::Claim.new(*cs, &f).check.should == true
+end
+
+class MRArray < RandomArray;end
+
+def for_all_ary(cs, &f)
+  MRArray.set_pattern(cs){|a,i| cs}
+  RushCheck::Assertion.new(MRArray) do | ary |
+    RushCheck::guard {ary.length > 0}
+    yield ary
+  end.check.should == true
+end
 
 describe BHeap, "をnewした時" do
   before do
@@ -20,141 +36,186 @@ describe BHeap, "をnewした時" do
 end
 
 describe BHeap, "にpushした時" do
-  before do
-    @heap = BHeap.new
-  end
-
   it "は、BHeap自身を返すべき" do
-    @heap.push(10).should == @heap
+    for_all(Integer) do |i|
+      heap = BHeap.new
+      heap.push(i).should == heap
+    end
   end
 
   it "は、empty?はfalseを返すべき" do
-    @heap.push 5
-    @heap.empty?.should be_false
+    for_all(Integer) do |i|
+      heap = BHeap.new
+      heap.push i
+      heap.empty?.should be_false
+    end
   end
 
   it "は、topは常に最も大きいものを返すべき" do
-    max = 0
-    10.times do
-      n = rand(20)
-      max = n if n > max
-      @heap.push n
-      @heap.top.should == max
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new
+      max = ary.sort.first
+      ary.each do |i|
+        max = i if i > max
+        heap.push i
+        heap.top.should == max
+      end
+      heap.top.should == max
+    end
+
+    for_all_ary(String) do |ary|
+      heap = BHeap.new
+      max = ary.sort.first
+      ary.each do |i|
+        max = i if i > max
+        heap.push i
+        heap.top.should == max
+      end
+      heap.top.should == max
     end
   end
 end
 
 describe BHeap, "を、昇順でソートするようにnewしてからpushした場合" do
-  before do
-    @heap = BHeap.new(lambda {|x, y| y <=> x})
-  end
-
   it "は、topは常に最も小さいものを返すべき" do
-    min = 20
-    10.times do
-      n = rand(20)
-      min = n if n < min
-      @heap.push n
-      @heap.top.should == min
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new(lambda {|x, y| y <=> x})
+      min = ary.sort.last
+      ary.each do |n|
+        min = n if n < min
+        heap.push n
+        heap.top.should == min
+      end
+      heap.top.should == min
+    end
+
+    for_all_ary(String) do |ary|
+      heap = BHeap.new(lambda {|x, y| y <=> x})
+      min = ary.sort.last
+      ary.each do |n|
+        min = n if n < min
+        heap.push n
+        heap.top.should == min
+      end
+      heap.top.should == min
     end
   end
 end
 
 describe BHeap, "からpopした時" do
-  before do
-    @heap = BHeap.new
-    @a = Array.new
-    10.times do
-      n = rand(20)
-      @a.push n
-      @heap.push n
-    end
-    @a.sort! {|x, y| y <=> x}
-  end
-
   it "は、常に最も大きいものを返すべき" do
-    @heap.pop.should == @a[0]
-    @heap.pop.should == @a[1]
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort!
+      until ary.empty? do
+        heap.pop.should == ary.pop
+      end
+      heap.empty?.should be_true
+    end
+
+    for_all_ary(String) do |ary|
+      heap = BHeap.new
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort!
+      until ary.empty? do
+        heap.pop.should == ary.pop
+      end
+      heap.empty?.should be_true
+    end
   end
 end
 
 describe BHeap, "を、昇順でソートするようにnewしてからpopした場合" do
-  before do
-    @heap = BHeap.new(lambda {|x, y| y <=> x})
-    @a = Array.new
-    10.times do
-      n = rand(20)
-      @a.push n
-      @heap.push n
-    end
-    @a.sort!
-  end
-
   it "は、常に最も小さいものを返すべき" do
-    @heap.pop.should == @a[0]
-    @heap.pop.should == @a[1]
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new(lambda {|x, y| y <=> x})
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort!
+      until ary.empty? do
+        heap.pop.should == ary.shift
+      end
+      heap.empty?.should be_true
+    end
+
+    for_all_ary(String) do |ary|
+      heap = BHeap.new(lambda {|x, y| y <=> x})
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort!
+      until ary.empty? do
+        heap.pop.should == ary.shift
+      end
+      heap.empty?.should be_true
+    end
   end
 end
 
 describe BHeap, "からpopした後" do
-  before do
-    @heap = BHeap.new
-    @a = Array.new
-    10.times do
-      n = rand(100)
-      @a.push n
-      @heap.push n
-    end
-    @a.sort! {|x, y| y <=> x}
-  end
-
   it "は、topは常に2番目に大きいものを返すべき" do
-    9.times do |i|
-      @heap.pop
-      @heap.top.should == @a[i + 1]
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort! {|x, y| y <=> x}
+      (ary.length - 1).times do |i|
+        heap.pop
+        heap.top.should == ary[i + 1]
+      end
+      heap.top.should == ary.last
     end
   end
 end
 
 describe BHeap, "を、昇順でソートするようにnewしてからpopした後" do
-  before do
-    @heap = BHeap.new(lambda {|x, y| y <=> x})
-    @a = Array.new
-    10.times do
-      n = rand(20)
-      @a.push n
-      @heap.push n
-    end
-    @a.sort!
-  end
-
   it "は、topは常に2番目に小さいものを返すべき" do
-    9.times do |i|
-      @heap.pop
-      @heap.top.should == @a[i + 1]
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new(lambda {|x, y| y <=> x})
+      ary.each do |n|
+        heap.push n
+      end
+      ary.sort!
+      (ary.length - 1).times do |i|
+        heap.pop
+        heap.top.should == ary[i + 1]
+      end
+      heap.top.should == ary.last
     end
   end
 end
 
 describe BHeap, "から全ての要素をpopした後" do
-  before do
-    @heap = BHeap.new
-    10.times do
-      @heap.push 0
-    end
-  end
-
   it "は、empty?はtrueを返すべき" do
-    10.times do
-      @heap.pop
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new
+      ary.each do |n|
+        heap.push n
+      end
+      ary.length.times do
+        heap.pop
+      end
+      heap.empty?.should be_true
     end
-    @heap.empty?.should be_true
   end
 
   it "は、popはnilを返すべき" do
-    10.times do
-      @heap.pop
+    for_all_ary(Integer) do |ary|
+      heap = BHeap.new
+      ary.each do |n|
+        heap.push n
+      end
+      ary.length.times do
+        heap.pop
+      end
+      heap.pop.should be_nil
     end
-    @heap.pop.should be_nil
   end
 end
